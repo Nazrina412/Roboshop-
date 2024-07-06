@@ -7,10 +7,10 @@ useradd roboshop
 rm -rf /app
 mkdir /app
 curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip
-cd/app
+cd /app
 unzip /tmp/catalogue.zip
 
-cd/app
+cd /app
 npm install
 systemctl daemon-reload
 systemctl enable catalogue
