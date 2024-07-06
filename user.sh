@@ -12,4 +12,4 @@ cd /app
 npm install
 systemctl daemon-reload
 systemctl enable user
-systemctl restatart user
+systemctl restart user
