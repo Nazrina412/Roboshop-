@@ -11,81 +11,124 @@ PRINT() {
 
   }
   STAT() {
-    # shellcheck disable=SC1072
-   if [ $1 -eq 0 ]; then
+    if [ $1 -eq 0 ]; then
       echo -e "\e[32mSUCCESS\e[0m"
-      else
-        echo -e "\e[31mFAILURE\e[0m"
-
-        fi
+    else
+      echo -e "\e[31mFAILURE\e[0m"
+      echo
+      echo "Refer the log file for more information : File Path : ${LOG_FILE}"
+      exit $1
+    fi
   }
 
-APP
- APP_PREREQ(){
-rm -rf ${app_path} &>>$LOG_FILE
-STAT $?
+ APP_PREREQ() {
+   PRINT Adding Application User
+   id roboshop &>>$LOG_FILE
+   if [ $? -ne 0 ]; then
+     useradd roboshop &>>$LOG_FILE
+   fi
+   STAT $?
+
+PRINT Remove old content
+  rm -rf ${app_path}  &>>$LOG_FILE
+  STAT $?
 
 
 print create app directory
-mkdir{app_path} &>>LOG_FILE
+mkdir ${app_path} &>>LOG_FILE
 STAT $?
 
-PRINT Download application content
-curl -o /tmp/{component}.zip https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
-STAT $?
+ PRINT Extract Application Content
+  cd ${app_path}
+  unzip /tmp/${component}.zip  &>>$LOG_FILE
+  STAT $?
+}
 
-Print Extract application content
-cd /usr/share/nginx/html
-unzip /tmp/{component}.zip  &>>LOG_FILE
-STAT $?
+SYSTEMD_SETUP() {
+    PRINT Copy Service file
+    cp ${code_dir}/${component}.service /etc/systemd/system/${component}.service &>>$LOG_FILE
+    STAT $?
+
+    PRINT Start Service
+    systemctl daemon-reload &>>$LOG_FILE
+    systemctl enable ${component} &>>$LOG_FILE
+    systemctl restart ${component} &>>$LOG_FILE
+    STAT $?
 }
 
 NODEJS() {
- PRINT disable Nodejs Default vesion
-  dnf module disable nodejs -y &>>LOG_FILE
-STAT $?
-
-
-  PRINT enable Nodejs 20 module
-  dnf module enable nodejs:20 -y &>>LOG_FILE
- STAT $?
-
-  PRINT install Nodejs
-  dnf install nodejs -y &>>LOG_FILE
+  PRINT Disable NodeJS Default Version
+  dnf module disable nodejs -y &>>$LOG_FILE
   STAT $?
 
-PRINT copy service file
-cp ${component}.service /etc/systemd/system/${component}.service &>>LOG_FILE
-STAT $?
+  PRINT Enable NodejS 20 Module
+  dnf module enable nodejs:20 -y &>>$LOG_FILE
+  STAT $?
 
-PRINT copy mongorepo file
-cp mongo.repo /etc/yum.repos.d/mongo.repo &>>LOG_FILE
-STAT $?
+  PRINT Install Nodejs
+  dnf install nodejs -y &>>$LOG_FILE
+  STAT $?
 
-PRINT adding application user
-id roboshop &>>LOG_FILE
- if [ $? -ne 0 ]; then
-    useradd roboshop &>>$LOG_FILE
-  fi
-STAT $?
+  APP_PREREQ
 
+  PRINT Download NodeJS Dependencies
+  npm install &>>$LOG_FILE
+  STAT $?
 
-cd /app
-
-PRINT extract Nodejs Dependencies
-unzip /tmp/${component}.zip &>>LOG_FILE
-STAT $?
-
-cd /app
-
-PRINT downlad Nodejs dependencies
-npm install &>>LOG_FILE
-STAT $?
-
-PRINT start service
-systemctl daemon-reload >/tmp/roboshop.log
-systemctl enable ${component} &>>LOG_FILE
-systemctl restart ${component} &>>LOG_FILE
-STAT $?
+  SCHEMA_SETUP
+  SYSTEMD_SETUP
 
 }
+
+JAVA() {
+
+  PRINT Install Maven and Java
+  dnf install maven -y &>>$LOG_FILE
+  STAT $?
+
+  APP_PREREQ
+
+  PRINT Download Dependencies
+  mvn clean package &>>$LOG_FILE
+  mv target/shipping-1.0.jar shipping.jar &>>$LOG_FILE
+  STAT $?
+
+  SCHEMA_SETUP
+  SYSTEMD_SETUP
+
+}
+
+SCHEMA_SETUP() {
+  if [ "$schema_setup" == "mongo" ]; then
+    PRINT COpy MongoDB repo file
+    cp mongo.repo /etc/yum.repos.d/mongo.repo &>>$LOG_FILE
+    STAT $?
+
+    PRINT Install MongoDB Client
+    dnf install mongodb-mongosh -y &>>$LOG_FILE
+    STAT $?
+
+    PRINT Load Master Data
+    mongosh --host mongo.dev.rdevopsb80.online </app/db/master-data.js &>>$LOG_FILE
+    STAT $?
+  fi
+
+   if [ "$schema_setup" == "mysql" ]; then
+      PRINT Install MySQL Client
+      dnf install mysql -y &>>$LOG_FILE
+      STAT $?
+
+      PRINT Load Schema
+      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/schema.sql &>>$LOG_FILE
+      STAT $?
+
+      PRINT Load Master Data
+      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/master-data.sql &>>$LOG_FILE
+      STAT $?
+
+      PRINT Create App Users
+      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/app-user.sql &>>$LOG_FILE
+      STAT $?
+    fi
+
+  }
