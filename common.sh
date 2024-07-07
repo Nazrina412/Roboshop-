@@ -14,7 +14,6 @@ PRINT() {
       echo -e "\e[32mSUCCESS\e[0m"
       else
         echo -e "\e[31mFAILURE\e[0m"
-        echo "Refer the log file for more information : File path : ${LOG_FILE}"
 
         fi
   }
@@ -44,9 +43,9 @@ STAT $?
 
 PRINT adding application user
 id roboshop &>>LOG_FILE
-if [ $? -ne 0]; then
-useradd roboshop &>>LOG_FILE
-fi
+ if [ $? -ne 0 ]; then
+    useradd roboshop &>>$LOG_FILE
+  fi
 STAT $?
 
 PRINT cleaning old content
