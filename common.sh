@@ -1,3 +1,5 @@
+
+
 LOG_FILE=/tmp/roboshop.log
 rm -f $LOG_FILE
 
@@ -18,6 +20,25 @@ PRINT() {
         fi
   }
 
+APP
+ APP_PREREQ(){
+rm -rf ${app_path} &>>$LOG_FILE
+STAT $?
+
+
+print create app directory
+mkdir{app_path} &>>LOG_FILE
+STAT $?
+
+PRINT Download application content
+curl -o /tmp/{component}.zip https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
+STAT $?
+
+Print Extract application content
+cd /usr/share/nginx/html
+unzip /tmp/{component}.zip  &>>LOG_FILE
+STAT $?
+}
 
 NODEJS() {
  PRINT disable Nodejs Default vesion
@@ -48,18 +69,6 @@ id roboshop &>>LOG_FILE
   fi
 STAT $?
 
-PRINT cleaning old content
-rm -rf /app &>>LOG_FILE
-STAT $?
-
-PRINT creating app directory
-mkdir /app &>>LOG_FILE
-STAT $?
-
-PRINT download app content
-curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>>LOG_FILE
-STAT $?
-
 
 cd /app
 
@@ -70,13 +79,13 @@ STAT $?
 cd /app
 
 PRINT downlad Nodejs dependencies
-npm install &>LOG_FILE
+npm install &>>LOG_FILE
 STAT $?
 
 PRINT start service
 systemctl daemon-reload >/tmp/roboshop.log
-systemctl enable ${component} &>LOG_FILE
-systemctl restart ${component} &>LOG_FILE
+systemctl enable ${component} &>>LOG_FILE
+systemctl restart ${component} &>>LOG_FILE
 STAT $?
 
 }
