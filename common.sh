@@ -109,7 +109,7 @@ SCHEMA_SETUP() {
     STAT $?
 
     PRINT Load Master Data
-    mongosh --host mongo.dev.rdevopsb80.online </app/db/master-data.js &>>$LOG_FILE
+    mongosh --host mongo.dev.naifah.online </app/db/master-data.js &>>$LOG_FILE
     STAT $?
   fi
 
@@ -119,15 +119,15 @@ SCHEMA_SETUP() {
       STAT $?
 
       PRINT Load Schema
-      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/schema.sql &>>$LOG_FILE
+      mysql -h mysql.dev.naifah.online -uroot -pRoboShop@1 < /app/db/schema.sql &>>$LOG_FILE
       STAT $?
 
       PRINT Load Master Data
-      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/master-data.sql &>>$LOG_FILE
+      mysql -h mysql.dev.naifah.online -uroot -pRoboShop@1 < /app/db/master-data.sql &>>$LOG_FILE
       STAT $?
 
       PRINT Create App Users
-      mysql -h mysql.dev.rdevopsb80.online -uroot -pRoboShop@1 < /app/db/app-user.sql &>>$LOG_FILE
+      mysql -h mysql.dev.naifah.online -uroot -pRoboShop@1 < /app/db/app-user.sql &>>$LOG_FILE
       STAT $?
     fi
 
