@@ -11,9 +11,9 @@ PRINT() {
   STAT() {
     # shellcheck disable=SC1072
    if [ $1 -eq 0 ]; then
-      echo success
+      echo -e "/e[32msuccess\e[0m"
       else
-        echo failure
+        echo -e "/e[36mfailure\e[0m"
         fi
   }
 
