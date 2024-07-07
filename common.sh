@@ -10,7 +10,7 @@ PRINT() {
   }
   STAT() {
     # shellcheck disable=SC1072
-if [ $1 -eq 0]; then
+   if [ $1 -eq 0 ]; then
       echo success
       else
         echo failure
