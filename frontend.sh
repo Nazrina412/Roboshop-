@@ -1,6 +1,4 @@
-source common.sh
-component=frontend
-app_path=/usr/share/nginx/html
+
 
 
 PRINT Disable Nginx default Version
